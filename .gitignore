@@ -1,0 +1,8 @@
+# Sistem operasi
+Thumbs.db
+.DS_Store
+
+# Pengaman: jangan pernah ikut ke repositori publik
+*.pdf
+*.epub
+*.zip
