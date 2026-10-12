@@ -71,3 +71,6 @@
     color: var(--text-muted);
     margin: 0;
   }
+  p + p {
+    margin-top: 8px;
+  }
