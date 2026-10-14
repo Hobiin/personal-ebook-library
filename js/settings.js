@@ -222,6 +222,6 @@ export function renderSettings(container) {
     pwaCard(),
     devCard(),
     card('Tentang',
-      el('p', { text: 'Personal Ebook Library. Tahap saat ini: M3 (database IndexedDB).' })),
+      el('p', { text: 'Personal Ebook Library. Tahap saat ini: M3 (database IndexedDB), uji update v6.' })),
   );
 }
