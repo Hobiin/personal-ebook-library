@@ -1,6 +1,6 @@
 // Service Worker minimal: menyimpan app shell agar aplikasi terbuka saat offline.
 // Setiap kali file shell berubah, naikkan nomor versi (v1 -> v2, dst.).
-const CACHE_NAME = 'ebook-shell-v2';
+const CACHE_NAME = 'ebook-shell-v3';
 
 const SHELL = [
   './',
@@ -16,7 +16,8 @@ const SHELL = [
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME)
-      .then((cache) => cache.addAll(SHELL))
+      // cache: 'reload' memaksa unduhan baru dari server, melewati cache HTTP browser
+      .then((cache) => cache.addAll(SHELL.map((url) => new Request(url, { cache: 'reload' }))))
       .then(() => self.skipWaiting()) // sementara; alur update yang rapi menyusul di M8
   );
 });

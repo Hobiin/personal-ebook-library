@@ -16,7 +16,7 @@ window.addEventListener('unhandledrejection', (e) => addLine(`Error (promise): $
 const title = document.createElement('h1');
 title.textContent = 'Personal Ebook Library';
 app.append(title);
-addLine('M1: kerangka PWA (uji update v2).');
+addLine('M1: kerangka PWA (uji update v3).');
 
 // Apakah dibuka sebagai aplikasi terpasang (Home Screen)?
 const standalone =
