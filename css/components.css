@@ -544,3 +544,7 @@
     height: 100%;
     background: var(--accent);
   }
+  /* Beri ruang untuk ikon hati agar tidak menimpa judul di sampul */
+.cover:has(.fav-badge) .cover-title {
+    padding-right: 22px;
+  }
