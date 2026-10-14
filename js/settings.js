@@ -212,3 +212,16 @@ function devCard() {
     ),
   );
 }
+
+export function renderSettings(container) {
+  container.append(
+    el('header', { class: 'appbar' }, el('h1', { text: 'Pengaturan' })),
+    themeCard(),
+    storageCard(),
+    backupCard(),
+    pwaCard(),
+    devCard(),
+    card('Tentang',
+      el('p', { text: 'Personal Ebook Library. Tahap saat ini: M3 (database IndexedDB).' })),
+  );
+}
