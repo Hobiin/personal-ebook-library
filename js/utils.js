@@ -80,6 +80,11 @@ export function el(tag, props = {}, ...children) {
   export function formatDate(timestamp) {
     return new Intl.DateTimeFormat('id-ID', { dateStyle: 'medium' }).format(timestamp);
   }
+
+  /** Teks pembanding untuk pencarian: huruf kecil, tanpa aksen, tanpa spasi tepi. */
+export function normalizeKey(text) {
+  return String(text ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+}
   
   // ---------- Toast ----------
   let toastTimer;

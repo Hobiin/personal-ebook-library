@@ -1,6 +1,6 @@
 // Halaman Pengaturan: tema, penyimpanan, backup (placeholder), status PWA, data contoh.
 import { el, formatBytes, showToast } from './utils.js';
-import { hasSampleData, setSampleData } from './store.js';
+import { getDbStats, resetSampleData, clearAllData } from './store.js';
 
 const THEME_KEY = 'theme';
 const THEMES = [['system', 'Sistem'], ['light', 'Terang'], ['dark', 'Gelap']];
@@ -161,31 +161,54 @@ function pwaCard() {
 }
 
 function devCard() {
-  const button = el('button', { class: 'btn', type: 'button' });
-  function paint() {
-    button.textContent = hasSampleData() ? 'Kosongkan data contoh' : 'Pulihkan data contoh';
-  }
-  button.addEventListener('click', () => {
-    setSampleData(!hasSampleData());
-    paint();
-    showToast(hasSampleData() ? 'Data contoh dipulihkan' : 'Data contoh dikosongkan');
-  });
-  paint();
-  return card('Pengembangan (sementara)',
-    el('p', { text: 'Untuk menguji tampilan kosong di Library. Bagian ini dihapus setelah database ada di M3.' }),
-    el('div', { class: 'card-actions' }, button),
-  );
-}
+  const stats = el('dl', { class: 'kv' });
 
-export function renderSettings(container) {
-  container.append(
-    el('header', { class: 'appbar' }, el('h1', { text: 'Pengaturan' })),
-    themeCard(),
-    storageCard(),
-    backupCard(),
-    pwaCard(),
-    devCard(),
-    card('Tentang',
-      el('p', { text: 'Personal Ebook Library. Tahap saat ini: M2 (antarmuka Library dengan data contoh).' })),
+  async function loadStats() {
+    try {
+      const info = await getDbStats();
+      stats.replaceChildren(
+        ...row('Versi database', el('dd', { text: String(info.version) })),
+        ...row('Buku', el('dd', { text: String(info.books) })),
+        ...row('File tersimpan', el('dd', { text: String(info.files) })),
+        ...row('Progres baca', el('dd', { text: String(info.progress) })),
+        ...row('Kategori', el('dd', { text: String(info.categories) })),
+      );
+    } catch (error) {
+      stats.replaceChildren(el('dd', { text: `gagal dibaca: ${error.message}` }));
+    }
+  }
+
+  async function perform(task, doneMessage) {
+    try {
+      await task();
+      showToast(doneMessage);
+    } catch (error) {
+      showToast(`Gagal: ${error.message}`, { error: true });
+    }
+    loadStats();
+  }
+
+  loadStats();
+  return card('Database (pengujian)',
+    stats,
+    el('p', { text: 'Untuk menguji penyimpanan. Bagian ini dihapus setelah impor dan hapus buku sungguhan tersedia.' }),
+    el('div', { class: 'card-actions' },
+      el('button', {
+        class: 'btn',
+        type: 'button',
+        text: 'Isi ulang data contoh',
+        onClick: () => perform(resetSampleData, 'Data contoh diisi ulang'),
+      }),
+      el('button', {
+        class: 'btn btn-danger',
+        type: 'button',
+        text: 'Hapus semua data',
+        onClick: () => {
+          if (window.confirm('Hapus semua buku dan progres dari database?')) {
+            perform(clearAllData, 'Semua data dihapus');
+          }
+        },
+      }),
+    ),
   );
 }

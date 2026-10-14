@@ -1,44 +1,74 @@
-// SEMENTARA (M2): data contoh di memori. Di M3 file ini digantikan oleh db.js (IndexedDB).
-// Bentuk datanya sengaja sama dengan rancangan skema: favorite = 0/1, progress = persen atau null.
+// Lapisan data untuk tampilan: memuat dari IndexedDB ke memori (cache) agar tampilan tetap sinkron.
+// Semua perubahan ditulis ke database dulu, baru cache diperbarui.
+import * as db from './db.js';
+import { makeSampleData } from './sample-data.js';
 
-export const CATEGORIES = ['Programming', 'Novel', 'Self Improvement', 'Science', 'History', 'Other'];
+let books = [];
+let categoryNames = [];
 
-const DAY = 24 * 60 * 60 * 1000;
-const MB = 1024 * 1024;
-const now = Date.now();
+async function reload() {
+  const [bookRows, progressRows, categoryRows] = await Promise.all([
+    db.getAllBooks(),
+    db.getAllProgress(),
+    db.getAllCategories(),
+  ]);
+  const names = new Map(categoryRows.map((row) => [row.id, row.name]));
+  const percents = new Map(progressRows.map((row) => [row.bookId, row.percent]));
 
-function makeSample() {
-  return [
-    { id: 's1', title: 'Pemrograman Python untuk Pemula', author: 'Penulis Contoh A', category: 'Programming', format: 'pdf', fileSize: 12.4 * MB, dateAdded: now - 40 * DAY, lastOpened: now - 1 * DAY, progress: 45, favorite: 1 },
-    { id: 's2', title: 'Sejarah Nusantara: Dari Kerajaan hingga Republik, Sebuah Tinjauan Panjang', author: 'Penulis Contoh B', category: 'History', format: 'epub', fileSize: 3.1 * MB, dateAdded: now - 30 * DAY, lastOpened: now - 3 * DAY, progress: 20, favorite: 0 },
-    { id: 's3', title: 'Sains Populer Hari Ini', author: 'Penulis Contoh C', category: 'Science', format: 'pdf', fileSize: 48.9 * MB, dateAdded: now - 25 * DAY, lastOpened: null, progress: null, favorite: 0 },
-    { id: 's4', title: 'Senja di Pelabuhan', author: 'Penulis Contoh D', category: 'Novel', format: 'epub', fileSize: 1.2 * MB, dateAdded: now - 20 * DAY, lastOpened: now - 10 * DAY, progress: 80, favorite: 1 },
-    { id: 's5', title: 'Kebiasaan Kecil, Hasil Besar', author: 'Penulis Contoh E', category: 'Self Improvement', format: 'epub', fileSize: 2.4 * MB, dateAdded: now - 15 * DAY, lastOpened: null, progress: null, favorite: 0 },
-    { id: 's6', title: 'Struktur Data dan Algoritma', author: 'Penulis Contoh F', category: 'Programming', format: 'pdf', fileSize: 21.7 * MB, dateAdded: now - 12 * DAY, lastOpened: null, progress: null, favorite: 1 },
-    { id: 's7', title: 'Pengantar Basis Data', author: 'Penulis Contoh G', category: 'Programming', format: 'pdf', fileSize: 9.8 * MB, dateAdded: now - 8 * DAY, lastOpened: null, progress: null, favorite: 0 },
-    { id: 's8', title: 'Catatan Kuliah Jaringan Komputer', author: 'Penulis Contoh H', category: 'Other', format: 'pdf', fileSize: 5.6 * MB, dateAdded: now - 4 * DAY, lastOpened: null, progress: null, favorite: 0 },
-    { id: 's9', title: 'Kumpulan Cerpen Pilihan', author: 'Penulis Contoh I', category: 'Novel', format: 'epub', fileSize: 0.9 * MB, dateAdded: now - 2 * DAY, lastOpened: null, progress: null, favorite: 0 },
-  ];
+  categoryNames = [...categoryRows].sort((a, b) => a.order - b.order).map((row) => row.name);
+  // Bidang `category` (nama) dan `progress` (persen) diturunkan untuk kebutuhan tampilan.
+  books = bookRows.map((row) => ({
+    ...row,
+    category: names.get(row.categoryId) ?? 'Other',
+    progress: percents.get(row.id) ?? null,
+  }));
 }
 
-let books = makeSample();
-let sampleEnabled = true;
+/** Dipanggil sekali saat aplikasi mulai. Pada pemakaian pertama, mengisi data contoh. */
+export async function initStore() {
+  await db.openDatabase();
+  const seeded = await db.getSetting('sampleSeeded', false);
+  if (!seeded) {
+    if ((await db.countBooks()) === 0) {
+      const sample = makeSampleData();
+      await db.saveBooks(sample.books, sample.progress);
+    }
+    await db.setSetting('sampleSeeded', true);
+  }
+  await reload();
+}
 
 export function getBooks() {
   return books;
 }
 
-export function hasSampleData() {
-  return sampleEnabled;
+export function getCategoryNames() {
+  return categoryNames;
 }
 
-export function setSampleData(enabled) {
-  sampleEnabled = enabled;
-  books = enabled ? makeSample() : [];
-}
-
-export function toggleFavorite(id) {
+export async function toggleFavorite(id) {
   const book = books.find((item) => item.id === id);
-  if (book) book.favorite = book.favorite ? 0 : 1;
+  if (!book) return null;
+  const next = book.favorite ? 0 : 1;
+  await db.setFavorite(id, next); // simpan dulu; cache hanya diperbarui bila berhasil
+  book.favorite = next;
   return book;
+}
+
+export async function resetSampleData() {
+  await db.clearLibrary();
+  const sample = makeSampleData();
+  await db.saveBooks(sample.books, sample.progress);
+  await db.setSetting('sampleSeeded', true);
+  await reload();
+}
+
+export async function clearAllData() {
+  await db.clearLibrary();
+  await db.setSetting('sampleSeeded', true);
+  await reload();
+}
+
+export function getDbStats() {
+  return db.getStats();
 }

@@ -2,6 +2,7 @@
 import { el, icon, showToast, closeSheet } from './utils.js';
 import { renderLibrary, renderFavorites } from './library.js';
 import { renderSettings, getTheme, applyTheme } from './settings.js';
+import { initStore } from './store.js';
 
 const ROUTES = {
   '/': { title: 'Library', render: renderLibrary },
@@ -47,10 +48,26 @@ function render() {
   window.scrollTo(0, 0);
 }
 
-applyTheme(getTheme());
-buildNav();
-window.addEventListener('hashchange', render);
-render();
+async function start() {
+  applyTheme(getTheme());
+  buildNav();
+  viewEl.replaceChildren(el('div', { class: 'empty' }, el('p', { text: 'Memuat perpustakaan...' })));
+
+  try {
+    await initStore();
+  } catch (error) {
+    viewEl.replaceChildren(el('div', { class: 'empty' },
+      el('h2', { text: 'Database tidak dapat dibuka' }),
+      el('p', { text: `${error.message}. Tutup lalu buka kembali aplikasi.` }),
+    ));
+    return;
+  }
+
+  window.addEventListener('hashchange', render);
+  render();
+}
+
+start();
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {

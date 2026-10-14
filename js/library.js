@@ -1,6 +1,6 @@
 // Halaman Library dan Favorites, kartu buku, dan bottom sheet detail buku.
-import { el, icon, createCover, openSheet, closeSheet, showToast, formatBytes, formatDate } from './utils.js';
-import { CATEGORIES, getBooks, toggleFavorite } from './store.js';
+import { el, icon, createCover, openSheet, closeSheet, showToast, formatBytes, formatDate, normalizeKey } from './utils.js';
+import { getBooks, getCategoryNames, toggleFavorite } from './store.js';
 
 // Disimpan di level modul agar pencarian/filter tetap ada saat pindah tab.
 const viewState = { query: '', category: 'all', sort: 'dateAdded' };
@@ -24,7 +24,7 @@ function sortBooks(list, sort) {
 }
 
 function matchesQuery(book, query) {
-  return book.title.toLowerCase().includes(query) || book.author.toLowerCase().includes(query);
+  return normalizeKey(book.title).includes(query) || normalizeKey(book.author).includes(query);
 }
 
 function createFab() {
@@ -71,8 +71,13 @@ function openBookSheet(book, onChange) {
     class: 'btn',
     type: 'button',
     text: favLabel(),
-    onClick: () => {
-      toggleFavorite(book.id);
+    onClick: async () => {
+      try {
+        await toggleFavorite(book.id);
+      } catch (error) {
+        showToast(`Gagal menyimpan: ${error.message}`, { error: true });
+        return;
+      }
       favButton.textContent = favLabel();
       onChange();
     },
@@ -139,7 +144,7 @@ export function renderLibrary(container) {
 
   function renderChips() {
     const all = getBooks();
-    const used = CATEGORIES.filter((name) => all.some((book) => book.category === name));
+    const used = getCategoryNames().filter((name) => all.some((book) => book.category === name));
     if (viewState.category !== 'all' && !used.includes(viewState.category)) viewState.category = 'all';
     const items = [['all', 'Semua'], ...used.map((name) => [name, name])];
     chipsEl.replaceChildren(...items.map(([value, label]) => el('button', {
@@ -156,7 +161,7 @@ export function renderLibrary(container) {
 
   function refresh() {
     const all = getBooks();
-    const query = viewState.query.trim().toLowerCase();
+    const query = normalizeKey(viewState.query);
     const filtered = all.filter((book) =>
       (viewState.category === 'all' || book.category === viewState.category)
       && (!query || matchesQuery(book, query)));

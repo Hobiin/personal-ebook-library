@@ -1,6 +1,6 @@
 // Service Worker minimal: menyimpan app shell agar aplikasi terbuka saat offline.
 // Setiap kali file shell berubah, naikkan nomor versi (v1 -> v2, dst.).
-const CACHE_NAME = 'ebook-shell-v4';
+const CACHE_NAME = 'ebook-shell-v5';
 
 const SHELL = [
   './',
@@ -9,7 +9,9 @@ const SHELL = [
   'css/components.css',
   'js/app.js',
   'js/utils.js',
+  'js/db.js',
   'js/store.js',
+  'js/sample-data.js',
   'js/library.js',
   'js/settings.js',
   'manifest.webmanifest',
