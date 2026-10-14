@@ -1,52 +1,61 @@
-// Titik masuk aplikasi (M1): status PWA ditampilkan di layar untuk pengujian di iPhone.
-const app = document.querySelector('#app');
+// Titik masuk aplikasi: router berbasis hash, bottom navigation, dan Service Worker.
+import { el, icon, showToast, closeSheet } from './utils.js';
+import { renderLibrary, renderFavorites } from './library.js';
+import { renderSettings, getTheme, applyTheme } from './settings.js';
 
-function addLine(text, isError = false) {
-  const line = document.createElement('p');
-  line.textContent = text;
-  if (isError) line.style.color = 'var(--danger)';
-  app.append(line);
-  return line;
-}
+const ROUTES = {
+  '/': { title: 'Library', render: renderLibrary },
+  '/favorites': { title: 'Favorit', render: renderFavorites },
+  '/settings': { title: 'Pengaturan', render: renderSettings },
+};
+
+const NAV_ITEMS = [
+  ['/', 'Library', 'library'],
+  ['/favorites', 'Favorit', 'heart'],
+  ['/settings', 'Pengaturan', 'settings'],
+];
+
+const viewEl = document.querySelector('#view');
+const navEl = document.querySelector('#bottom-nav');
 
 // Error ditampilkan di layar (iPhone tidak punya Console yang bisa dilihat dari Windows)
-window.addEventListener('error', (e) => addLine(`Error: ${e.message}`, true));
-window.addEventListener('unhandledrejection', (e) => addLine(`Error (promise): ${e.reason}`, true));
+window.addEventListener('error', (event) => showToast(`Error: ${event.message}`, { error: true }));
+window.addEventListener('unhandledrejection', (event) => showToast(`Error: ${event.reason}`, { error: true }));
 
-const title = document.createElement('h1');
-title.textContent = 'Personal Ebook Library';
-app.append(title);
-addLine('M1: kerangka PWA (uji update v3).');
-
-// Apakah dibuka sebagai aplikasi terpasang (Home Screen)?
-const standalone =
-  window.matchMedia('(display-mode: standalone)').matches ||
-  window.navigator.standalone === true;
-addLine(`Dibuka sebagai aplikasi terpasang: ${standalone ? 'ya' : 'tidak'}`);
-
-// Status koneksi (indikasi saja, tidak selalu akurat)
-const netLine = addLine('');
-function updateNet() {
-  netLine.textContent = `Koneksi: ${navigator.onLine ? 'online' : 'offline'}`;
+function buildNav() {
+  navEl.replaceChildren(...NAV_ITEMS.map(([path, label, iconName]) => el('a', {
+    href: `#${path}`,
+    dataset: { route: path },
+  }, icon(iconName, 24), el('span', { text: label }))));
 }
-updateNet();
-window.addEventListener('online', updateNet);
-window.addEventListener('offline', updateNet);
 
-// Service Worker
-const swLine = addLine('Service Worker: memeriksa...');
+function currentPath() {
+  const hash = window.location.hash.replace(/^#/, '');
+  return ROUTES[hash] ? hash : '/';
+}
+
+function render() {
+  const path = currentPath();
+  closeSheet();
+  viewEl.replaceChildren();
+  ROUTES[path].render(viewEl);
+  navEl.querySelectorAll('a').forEach((link) => {
+    if (link.dataset.route === path) link.setAttribute('aria-current', 'page');
+    else link.removeAttribute('aria-current');
+  });
+  document.title = `${ROUTES[path].title} | Personal Ebook Library`;
+  window.scrollTo(0, 0);
+}
+
+applyTheme(getTheme());
+buildNav();
+window.addEventListener('hashchange', render);
+render();
+
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('service-worker.js')
-    .then(() => navigator.serviceWorker.ready)
-    .then(() => {
-      swLine.textContent = 'Service Worker: aktif';
-      return caches.keys();
-    })
-    .then((keys) => addLine(`Cache: ${keys.join(', ') || '(kosong)'}`))
-    .catch((err) => {
-      swLine.textContent = `Service Worker gagal: ${err.message}`;
-      swLine.style.color = 'var(--danger)';
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('service-worker.js').catch((error) => {
+      showToast(`Service Worker gagal: ${error.message}`, { error: true });
     });
-} else {
-  swLine.textContent = 'Service Worker: tidak didukung browser ini';
+  });
 }
