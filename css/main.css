@@ -1,76 +1,123 @@
 /* Design tokens (sesuai Fase 3). Komponen hanya memakai variabel ini. */
 :root {
-    --bg: #FAF8F5;
-    --surface: #FFFFFF;
-    --text: #1F1D1A;
-    --text-muted: #6B665F;
-    --border: #E8E3DB;
-    --accent: #2F6B5E;
-    --danger: #B3402F;
-    --fav: #C8553D;
-  
-    --font-ui: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-    --font-serif: ui-serif, Georgia, "Times New Roman", serif;
-  }
-  
-  /* Dark mode mengikuti sistem, kecuali pengguna memaksa tema terang */
-  @media (prefers-color-scheme: dark) {
-    :root:not([data-theme="light"]) {
-      --bg: #121211;
-      --surface: #1C1B19;
-      --text: #EDEAE4;
-      --text-muted: #A09A90;
-      --border: #2E2C29;
-      --accent: #6FB5A3;
-      --danger: #E27D6B;
-      --fav: #E0846F;
-    }
-  }
-  
-  /* Dark mode paksa dari pengaturan */
-  :root[data-theme="dark"] {
+  --bg: #FAF8F5;
+  --surface: #FFFFFF;
+  --text: #1F1D1A;
+  --text-muted: #6B665F;
+  --border: #E8E3DB;
+  --accent: #2F6B5E;
+  --on-accent: #FFFFFF;
+  --danger: #B3402F;
+  --fav: #C8553D;
+  --shadow: 0 1px 2px rgba(31, 29, 26, 0.08), 0 4px 12px rgba(31, 29, 26, 0.08);
+
+  --font-ui: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-serif: ui-serif, Georgia, "Times New Roman", serif;
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --nav-height: 60px;
+}
+
+/* Dark mode mengikuti sistem, kecuali pengguna memaksa tema terang */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
     --bg: #121211;
     --surface: #1C1B19;
     --text: #EDEAE4;
     --text-muted: #A09A90;
     --border: #2E2C29;
     --accent: #6FB5A3;
+    --on-accent: #0F1F1B;
     --danger: #E27D6B;
     --fav: #E0846F;
+    --shadow: none;
   }
-  
+}
+
+/* Dark mode paksa dari pengaturan */
+:root[data-theme="dark"] {
+  --bg: #121211;
+  --surface: #1C1B19;
+  --text: #EDEAE4;
+  --text-muted: #A09A90;
+  --border: #2E2C29;
+  --accent: #6FB5A3;
+  --on-accent: #0F1F1B;
+  --danger: #E27D6B;
+  --fav: #E0846F;
+  --shadow: none;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  scroll-padding-top: env(safe-area-inset-top, 0px);
+}
+
+html, body {
+  margin: 0;
+  min-height: 100%;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-ui);
+  font-size: 16px;
+  line-height: 1.5;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body.sheet-open {
+  overflow: hidden;
+}
+
+#view {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: var(--space-4);
+  padding-top: max(var(--space-4), env(safe-area-inset-top, 0px));
+  padding-bottom: calc(var(--nav-height) + env(safe-area-inset-bottom, 0px) + 96px);
+  outline: none;
+}
+
+h1 {
+  font-family: var(--font-serif);
+  font-size: 28px;
+  line-height: 1.2;
+  margin: 0;
+}
+
+h2 {
+  margin: 0;
+}
+
+p {
+  color: var(--text-muted);
+  margin: 0;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
-    box-sizing: border-box;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
   }
-  
-  html, body {
-    margin: 0;
-    min-height: 100%;
-  }
-  
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: var(--font-ui);
-    font-size: 16px;
-    line-height: 1.5;
-  }
-  
-  #app {
-    padding: 24px;
-    padding-top: max(24px, env(safe-area-inset-top));
-  }
-  
-  h1 {
-    font-family: var(--font-serif);
-    font-size: 28px;
-    margin: 0 0 8px;
-  }
-  
-  p {
-    color: var(--text-muted);
-    margin: 0;
-  }
-  p + p {
-    margin-top: 8px;
-  }
+}
