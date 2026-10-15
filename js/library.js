@@ -1,6 +1,7 @@
 // Halaman Library dan Favorites, kartu buku, dan bottom sheet detail buku.
-import { el, icon, createCover, openSheet, closeSheet, showToast, formatBytes, formatDate, normalizeKey } from './utils.js';
+import { el, icon, createCover, openSheet, closeSheet, showToast, formatBytes, formatDate, normalizeKey, authorLabel } from './utils.js';
 import { getBooks, getCategoryNames, toggleFavorite } from './store.js';
+import { startImport } from './import-ui.js';
 
 // Disimpan di level modul agar pencarian/filter tetap ada saat pindah tab.
 const viewState = { query: '', category: 'all', sort: 'dateAdded' };
@@ -27,12 +28,12 @@ function matchesQuery(book, query) {
   return normalizeKey(book.title).includes(query) || normalizeKey(book.author).includes(query);
 }
 
-function createFab() {
+function createFab(onClick) {
   return el('button', {
     class: 'fab',
     type: 'button',
     'aria-label': 'Tambah ebook',
-    onClick: () => showToast('Impor ebook tersedia di Milestone M4'),
+    onClick,
   }, icon('plus', 28));
 }
 
@@ -55,12 +56,12 @@ function createBookCard(book, { onOpen, showProgressLabel = false }) {
   return el('button', {
     type: 'button',
     class: 'book-card',
-    'aria-label': `${book.title}, ${book.author}`,
+    'aria-label': `${book.title}, ${authorLabel(book)}`,
     onClick: () => onOpen(book),
   },
     cover,
     el('div', { class: 'book-title', text: book.title }),
-    el('div', { class: 'book-author', text: book.author }),
+    el('div', { class: 'book-author', text: authorLabel(book) }),
     showProgressLabel ? el('div', { class: 'book-progress-label', text: `${book.progress}%` }) : null,
   );
 }
@@ -87,6 +88,7 @@ function openBookSheet(book, onChange) {
     ['Kategori', book.category],
     ['Format', book.format.toUpperCase()],
     ['Ukuran', formatBytes(book.fileSize)],
+    ['File', book.hasFile ? 'Tersimpan di perangkat' : 'Data contoh (tanpa file)'],
     ['Ditambahkan', formatDate(book.dateAdded)],
     ['Terakhir dibaca', book.lastOpened ? formatDate(book.lastOpened) : 'Belum pernah'],
     ['Progres', book.progress > 0 ? `${book.progress}%` : '-'],
@@ -97,7 +99,7 @@ function openBookSheet(book, onChange) {
       createCover(book),
       el('div', {},
         el('h2', { class: 'detail-title', text: book.title }),
-        el('p', { text: book.author }),
+        el('p', { text: authorLabel(book) }),
       ),
     ),
     el('dl', { class: 'detail-meta' },
@@ -120,6 +122,13 @@ function openBookSheet(book, onChange) {
 }
 
 export function renderLibrary(container) {
+  // Setelah impor, gambar ulang Library (hanya jika pengguna masih berada di halaman ini).
+  const rerender = () => {
+    if (container.dataset.view !== '/') return;
+    container.replaceChildren();
+    renderLibrary(container);
+  };
+
   container.append(el('header', { class: 'appbar' }, el('h1', { text: 'Library' })));
 
   if (getBooks().length === 0) {
@@ -131,7 +140,7 @@ export function renderLibrary(container) {
         class: 'btn btn-primary',
         type: 'button',
         text: 'Tambah ebook',
-        onClick: () => showToast('Impor ebook tersedia di Milestone M4'),
+        onClick: () => startImport(rerender),
       }),
     }));
     return;
@@ -228,7 +237,7 @@ export function renderLibrary(container) {
     ),
     continueEl,
     gridEl,
-    createFab(),
+    createFab(() => startImport(rerender)),
   );
 
   renderChips();

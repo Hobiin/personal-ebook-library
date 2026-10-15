@@ -48,6 +48,10 @@ export function el(tag, props = {}, ...children) {
   }
   
   // ---------- Sampul buku ----------
+/** Teks penulis untuk tampilan; penulis kosong (metadata belum ada) diberi label cadangan. */
+export function authorLabel(book) {
+  return book.author || 'Penulis tidak diketahui';
+}
   const COVER_COLORS = ['#2F6B5E', '#8A5A44', '#4A5D7A', '#7A4E6B', '#6B6F3A', '#9A6B2F'];
   
   function coverColor(title) {
@@ -60,7 +64,7 @@ export function el(tag, props = {}, ...children) {
   export function createCover(book) {
     return el('div', { class: 'cover', style: `--cover:${coverColor(book.title)}`, 'aria-hidden': 'true' },
       el('span', { class: 'cover-title', text: book.title }),
-      el('span', { class: 'cover-author', text: book.author }),
+      el('span', { class: 'cover-author', text: authorLabel(book) }),
     );
   }
   

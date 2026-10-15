@@ -72,3 +72,12 @@ export async function clearAllData() {
 export function getDbStats() {
   return db.getStats();
 }
+
+
+/** Memuat ulang cache dari database (dipanggil setelah impor). */
+export const refreshFromDb = reload;
+
+/** Total ukuran ebook yang benar-benar tersimpan sebagai file (tanpa data contoh). */
+export function getImportedBytes() {
+  return books.filter((book) => book.hasFile).reduce((sum, book) => sum + (book.fileSize || 0), 0);
+}

@@ -189,3 +189,34 @@ export async function getSetting(key, fallback = null) {
 export function setSetting(key, value) {
   return run('settings', 'readwrite', (tx) => requestToPromise(tx.objectStore('settings').put({ key, value })));
 }
+
+
+// ---------- Impor ebook (M4) ----------
+/** Menyimpan buku dan file-nya dalam satu transaksi: keduanya berhasil atau tidak sama sekali. */
+export function addBook(book, blob) {
+  return run(['books', 'files'], 'readwrite', (tx) => Promise.all([
+    requestToPromise(tx.objectStore('books').put(toRecord(book))),
+    requestToPromise(tx.objectStore('files').put({
+      bookId: book.id,
+      blob,
+      mime: blob.type || '',
+      size: blob.size,
+    })),
+  ]));
+}
+
+export function findBookByFingerprint(fingerprint) {
+  return run('books', 'readonly', (tx) => requestToPromise(tx.objectStore('books').index('fingerprint').get(fingerprint)));
+}
+
+export async function getFileBlob(bookId) {
+  const record = await run('files', 'readonly', (tx) => requestToPromise(tx.objectStore('files').get(bookId)));
+  return record ? record.blob : null;
+}
+
+/** Menghapus satu buku beserta file dan progresnya. */
+export function deleteBook(id) {
+  return run(['books', 'files', 'progress'], 'readwrite', (tx) => Promise.all(
+    ['books', 'files', 'progress'].map((name) => requestToPromise(tx.objectStore(name).delete(id))),
+  ));
+}

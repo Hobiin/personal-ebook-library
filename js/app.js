@@ -38,6 +38,7 @@ function currentPath() {
 function render() {
   const path = currentPath();
   closeSheet();
+  viewEl.dataset.view = path;
   viewEl.replaceChildren();
   ROUTES[path].render(viewEl);
   navEl.querySelectorAll('a').forEach((link) => {

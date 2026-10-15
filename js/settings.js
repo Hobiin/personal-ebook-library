@@ -1,6 +1,6 @@
 // Halaman Pengaturan: tema, penyimpanan, backup (placeholder), status PWA, data contoh.
 import { el, formatBytes, showToast } from './utils.js';
-import { getDbStats, resetSampleData, clearAllData } from './store.js';
+import { getDbStats, getImportedBytes, resetSampleData, clearAllData } from './store.js';
 
 const THEME_KEY = 'theme';
 const THEMES = [['system', 'Sistem'], ['light', 'Terang'], ['dark', 'Gelap']];
@@ -170,6 +170,7 @@ function devCard() {
         ...row('Versi database', el('dd', { text: String(info.version) })),
         ...row('Buku', el('dd', { text: String(info.books) })),
         ...row('File tersimpan', el('dd', { text: String(info.files) })),
+        ...row('Ukuran ebook', el('dd', { text: formatBytes(getImportedBytes()) })),
         ...row('Progres baca', el('dd', { text: String(info.progress) })),
         ...row('Kategori', el('dd', { text: String(info.categories) })),
       );
@@ -222,6 +223,6 @@ export function renderSettings(container) {
     pwaCard(),
     devCard(),
     card('Tentang',
-      el('p', { text: 'Personal Ebook Library. Tahap saat ini: M3 (database IndexedDB), uji update v6.' })),
+      el('p', { text: 'Personal Ebook Library. Tahap saat ini: M4a (impor ebook).' })),
   );
 }

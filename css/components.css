@@ -552,3 +552,53 @@
 .cover:has(.fav-badge) .cover-title {
   padding-right: 22px;
 }
+
+/* ---------- Impor ebook ---------- */
+.import-list {
+  display: grid;
+  gap: var(--space-3);
+  margin: var(--space-4) 0;
+  padding: 0;
+  list-style: none;
+}
+
+.import-item {
+  display: grid;
+  gap: var(--space-1);
+  padding: var(--space-3);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--space-3);
+}
+
+.import-name {
+  font-size: 14px;
+  font-weight: 600;
+  word-break: break-word;
+}
+
+.import-status {
+  font-size: 14px;
+}
+
+.import-status.ok {
+  color: var(--accent);
+}
+
+.import-status.warn {
+  color: var(--fav);
+}
+
+.import-status.error {
+  color: var(--danger);
+}
+
+.import-status.busy {
+  color: var(--text-muted);
+}
+
+.import-item .btn {
+  justify-self: start;
+  min-height: 40px;
+  margin-top: var(--space-2);
+}
